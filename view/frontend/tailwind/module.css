@@ -15,5 +15,5 @@
  *
  * I valori usano fallback espliciti per non dipendere dalle variabili del tema.
  */
-@import "prices.css";
-@import "pagebuilder.css";
+@import "./prices.css";
+@import "./pagebuilder.css";
