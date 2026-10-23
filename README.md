@@ -94,30 +94,6 @@ Kommerce_HyvaThemeFix/
     └── final_price_bundle.phtml                          # bundle
 ```
 
-## Installazione
-
-```bash
-# Opzione A — copia diretta in app/code
-cp -r Kommerce Magento_ROOT/app/code/
-
-# Opzione B — via composer (repository path/vcs)
-composer config repositories.kommerce-hyva-theme-fix path ../packages/module-hyva-theme-fix
-composer require kommerce/module-hyva-theme-fix:*
-
-bin/magento module:enable Kommerce_HyvaThemeFix
-bin/magento setup:upgrade         # rigenera anche app/etc/hyva-themes.json
-bin/magento setup:di:compile      # se compiled mode attivo
-bin/magento cache:flush
-
-# Rebuild Tailwind del tema: il CSS del modulo entra in styles.css
-cd app/design/frontend/<Vendor>/<theme>/web/tailwind
-npm run build
-```
-
-Se `app/etc/hyva-themes.json` non includesse il modulo (es. per cache
-`compiled_config` rimasta stale su un'installazione esistente), forza la
-rigenerazione con `bin/magento hyva:config:generate` e ripeti il rebuild del tema.
-
 ## Test
 
 1. Store > Configuration > Sales > Tax > Price Display Settings:
