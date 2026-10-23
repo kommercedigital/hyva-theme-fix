@@ -1,0 +1,91 @@
+<?php
+/**
+ * Kommerce_HyvaThemeFix
+ *
+ * Sostituisce Magento_ConfigurableProduct::product/price/final_price.phtml
+ *
+ * FIX APPLICATO: rimosso 'skip_adjustments' => true dal blocco "old-price",
+ * stesso bug di final_price.phtml (prodotti semplici). Vedi commento in
+ * quel file e https://github.com/magento/magento2/issues/37989
+ *
+ * NOTA SULLA STRUTTURA: questo template ricalca quella standard usata da
+ * Magento_ConfigurableProduct (getPriceType('regular_price') / ('final_price'),
+ * hasSpecialPrice() mostrato solo su PDP tramite isProductList(),
+ * showMinimalPrice()/getUseLinkForAsLowAs()/renderAmountMinimal() per il
+ * caso "a partire da" quando le varianti hanno prezzi diversi). Prima di
+ * andare in produzione confronta questo file con
+ * vendor/magento/module-configurable-product/view/base/templates/product/price/final_price.phtml
+ * della tua versione di Magento, per eventuali differenze minori introdotte
+ * da patch successive.
+ *
+ * NOTA SUGLI STILI: nessuna utility Tailwind (non compilata per app/code);
+ * tutto lo stile è in view/frontend/tailwind/module.css, incluso nel build
+ * del tema tramite la registrazione in app/etc/hyva-themes.json.
+ *
+ * @var \Magento\ConfigurableProduct\Pricing\Render\FinalPriceBox $block
+ */
+
+$priceModel      = $block->getPriceType('regular_price');
+$finalPriceModel = $block->getPriceType('final_price');
+$idSuffix        = $block->getIdSuffix() ?: '';
+$schema          = $block->getZone() === 'item_view';
+
+// Lo special price barrato ha senso solo in PDP: in PLP le varianti
+// possono avere prezzi diversi tra loro, mostrarlo lì sarebbe fuorviante
+// (comportamento standard Magento per questo product type).
+$hasSpecial = !$block->isProductList() && $block->hasSpecialPrice();
+
+$discountPercent = 0;
+if ($hasSpecial) {
+    $regularValue = $priceModel->getAmount()->getValue();
+    $finalValue   = $finalPriceModel->getAmount()->getValue();
+    if ($regularValue > 0) {
+        $discountPercent = (int) round((($regularValue - $finalValue) / $regularValue) * 100);
+    }
+}
+?>
+<div class="kommerce-price-box">
+
+    <?php if ($hasSpecial): ?>
+
+        <?php if ($discountPercent > 0): ?>
+            <span class="kommerce-price-discount">
+                -<?= $discountPercent ?>%
+            </span>
+        <?php endif; ?>
+
+        <span class="old-price">
+            <?= /* @noEscape */ $block->renderAmount($priceModel->getAmount(), [
+                'display_label'     => __('Regular Price'),
+                'price_id'          => $block->getPriceId('old-price-' . $idSuffix),
+                'include_container' => true,
+                // 'skip_adjustments' rimosso volutamente.
+            ]); ?>
+        </span>
+
+    <?php endif; ?>
+
+    <span class="normal-price">
+        <?= /* @noEscape */ $block->renderAmount($finalPriceModel->getAmount(), [
+            'price_id'          => $block->getPriceId('product-price-' . $idSuffix),
+            'price_type'        => 'finalPrice',
+            'include_container' => true,
+            'schema'            => $schema,
+        ]); ?>
+    </span>
+
+    <?php if ($block->showMinimalPrice()): ?>
+        <!-- Varianti con prezzi diversi tra loro: "A partire da X". -->
+        <?php if ($block->getUseLinkForAsLowAs()): ?>
+            <a href="<?= $block->escapeUrl($block->getSaleableItem()->getProductUrl()) ?>"
+               class="minimal-price-link">
+                <?= /* @noEscape */ $block->renderAmountMinimal(); ?>
+            </a>
+        <?php else: ?>
+            <span class="minimal-price-link">
+                <?= /* @noEscape */ $block->renderAmountMinimal(); ?>
+            </span>
+        <?php endif; ?>
+    <?php endif; ?>
+
+</div>

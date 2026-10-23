@@ -1,0 +1,91 @@
+<?php
+/**
+ * Kommerce_HyvaThemeFix
+ *
+ * Sostituisce Magento_Catalog::product/price/final_price.phtml
+ * (prodotti simple / virtual / downloadable, PLP e widget).
+ *
+ * FIX APPLICATO rispetto al template originale:
+ * sul blocco "old-price" (il prezzo pieno, barrato, mostrato quando il
+ * prodotto è in offerta) è stato rimosso 'skip_adjustments' => true.
+ *
+ * Con "Display Prices In Catalog" = "Including and Excluding Tax", quel
+ * flag impediva il calcolo dell'importo IVA esclusa per la riga barrata,
+ * causando il problema visivo: il prezzo pieno IVA esclusa appariva come
+ * un numero "slegato", senza barratura né etichetta coerente con il resto
+ * del price box.
+ * Bug Magento core di riferimento: https://github.com/magento/magento2/issues/37989
+ *
+ * NOTA SUGLI STILI: questo template non usa utility Tailwind (non vengono
+ * compilate per i file in app/code). Tutto lo stile è in
+ * view/frontend/tailwind/module.css, incluso nel build Tailwind del tema
+ * tramite la registrazione del modulo in app/etc/hyva-themes.json
+ * (vedi Observer/RegisterModuleForHyvaConfig): così il modulo è
+ * autoconsistente e portabile su una installazione Hyvä vanilla.
+ *
+ * @var \Magento\Catalog\Pricing\Render\FinalPriceBox $block
+ */
+
+use Magento\Catalog\Pricing\Price\FinalPrice;
+use Magento\Catalog\Pricing\Price\RegularPrice;
+
+$priceInfo   = $block->getSaleableItem()->getPriceInfo();
+$regularAmt  = $priceInfo->getPrice(RegularPrice::PRICE_CODE)->getAmount();
+$finalAmt    = $priceInfo->getPrice(FinalPrice::PRICE_CODE)->getAmount();
+$idSuffix    = $block->getIdSuffix() ?: '';
+
+$hasSpecial = $block->hasSpecialPrice();
+
+// Percentuale di sconto per il badge "-X%" (solo se in offerta)
+$discountPercent = 0;
+if ($hasSpecial && $regularAmt->getValue() > 0) {
+    $discountPercent = (int) round(
+        (($regularAmt->getValue() - $finalAmt->getValue()) / $regularAmt->getValue()) * 100
+    );
+}
+?>
+<div class="kommerce-price-box" data-price-box="product-id-<?= (int) $block->getSaleableItem()->getId() ?>">
+
+    <?php if ($hasSpecial): ?>
+
+        <?php if ($discountPercent > 0): ?>
+            <span class="kommerce-price-discount">
+                -<?= $discountPercent ?>%
+            </span>
+        <?php endif; ?>
+
+        <!-- Prezzo pieno (barrato). Riga secondaria, più piccola e grigia. -->
+        <span class="old-price">
+            <?= /* @noEscape */ $block->renderAmount($regularAmt, [
+                'display_label'     => __('Regular Price'),
+                'price_id'          => $block->getPriceId('old-price-' . $idSuffix),
+                'price_type'        => 'oldPrice',
+                'include_container' => true,
+                // 'skip_adjustments' rimosso volutamente: vedi commento in testa al file.
+            ]); ?>
+        </span>
+
+        <!-- Prezzo finale scontato. Riga primaria: quella su cui deve cadere l'occhio. -->
+        <span class="special-price">
+            <?= /* @noEscape */ $block->renderAmount($finalAmt, [
+                'display_label'     => __('Special Price'),
+                'price_id'          => $block->getPriceId('special-price-' . $idSuffix),
+                'price_type'        => 'finalPrice',
+                'include_container' => true,
+            ]); ?>
+        </span>
+
+    <?php else: ?>
+
+        <!-- Nessuna offerta attiva: un solo prezzo, in evidenza. -->
+        <span class="normal-price">
+            <?= /* @noEscape */ $block->renderAmount($finalAmt, [
+                'price_id'          => $block->getPriceId('product-price-' . $idSuffix),
+                'price_type'        => 'finalPrice',
+                'include_container' => true,
+            ]); ?>
+        </span>
+
+    <?php endif; ?>
+
+</div>

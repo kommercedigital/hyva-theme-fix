@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+    Kommerce_HyvaThemeFix
+
+    Registra il modulo per la compilazione Tailwind di Hyvä
+    (app/etc/hyva-themes.json), così che view/frontend/tailwind/module.css
+    venga incluso nel build del tema.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="hyva_config_generate_before">
+        <observer name="kommerce_hyvathemefix_register_hyva_config"
+                  instance="Kommerce\HyvaThemeFix\Observer\RegisterModuleForHyvaConfig"/>
+    </event>
+</config>

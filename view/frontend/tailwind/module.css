@@ -1,0 +1,192 @@
+/**
+ * Kommerce_HyvaThemeFix
+ *
+ * Stili per la visualizzazione dei prezzi Hyvä.
+ *
+ * Questo file viene incluso nel build Tailwind del tema perché il modulo si
+ * registra in app/etc/hyva-themes.json (vedi Observer/RegisterModuleForHyvaConfig).
+ * Per questo possiamo usare CSS puro senza dipendere dalle utility compilate
+ * del tema: è il meccanismo ufficiale Hyvä per il CSS dei moduli.
+ *
+ * Copre:
+ *  - PDP  → Magento_Catalog::product/view/price.phtml
+ *           (.final-price, .old-price-excl-tax, .final-price-excl-tax)
+ *  - PLP  → template del modulo (.kommerce-price-box, badge sconto, ecc.)
+ *
+ * I valori usano fallback espliciti per non dipendere dalle variabili del tema.
+ */
+
+/* Scansiona i template del modulo per eventuali utility Tailwind. */
+@source "../templates/**/*.phtml";
+
+/* ==================================================================
+ * PDP – Magento_Catalog::product/view/price.phtml (Hyvä)
+ *
+ * Il template PDP mostra quattro valori (pieno IVA incl., pieno IVA
+ * escl., finale IVA incl., finale IVA escl.) che senza regole dedicate
+ * risultano tutti identici e impilati. Li raggruppiamo in due righe:
+ * prezzo pieno barrato e prezzo finale in evidenza, ciascuno con la
+ * relativa quota IVA esclusa accanto.
+ *
+ * Il selettore :has() limita l'effetto al solo price box della PDP,
+ * senza toccare PLP, tier price e wishlist.
+ * ================================================================== */
+
+/* Contenitore statico PDP: colonna (pieno sopra, finale sotto). */
+.price-box .price-container:has(> .final-price) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+/* Con IVA incl. + escl.: due righe affiancate (prezzo | IVA escl.). */
+.price-box .price-container:has(> .final-price-excl-tax) {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: baseline;
+    justify-content: start;
+    column-gap: 0.5rem;
+    row-gap: 0.25rem;
+}
+
+/* Prezzo finale: riga primaria. */
+.price-box .final-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.5rem;
+    color: #111827; /* gray-900 */
+}
+
+.price-box .final-price .price {
+    font-size: 1.5rem;   /* text-2xl */
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+/* Prezzo pieno barrato (PDP). */
+.price-box .old-price {
+    color: #6b7280; /* gray-500 */
+}
+
+.price-box .old-price .price {
+    font-size: 0.875em;
+    font-weight: 400;
+    text-decoration: line-through;
+}
+
+/* Quote IVA esclusa: riga secondaria, piccola e attenuata. */
+.price-box .old-price-excl-tax,
+.price-box .final-price-excl-tax,
+.price-box .price-excl-tax {
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 400;
+    color: #6b7280;      /* gray-500 */
+}
+
+.price-box .old-price-excl-tax {
+    font-size: 0.75rem;  /* text-xs */
+    color: #9ca3af;      /* gray-400 */
+}
+
+.price-box .old-price-excl-tax .price {
+    text-decoration: line-through;
+}
+
+/* ==================================================================
+ * PLP / liste / widget – template del modulo (.kommerce-price-box)
+ * ================================================================== */
+
+.kommerce-price-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+/* Badge sconto "-X%". */
+.kommerce-price-box .kommerce-price-discount {
+    display: inline-block;
+    background-color: #dc2626; /* red-600 */
+    color: #ffffff;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.125rem;
+    margin-bottom: 0.125rem;
+}
+
+/* Prezzo pieno barrato. */
+.kommerce-price-box .old-price {
+    font-size: 0.875rem;
+    line-height: 1.375;
+    color: #6b7280; /* gray-500 */
+}
+
+.kommerce-price-box .old-price .price {
+    text-decoration: line-through;
+}
+
+/* Prezzo finale / normale in evidenza. */
+.kommerce-price-box .special-price .price,
+.kommerce-price-box .normal-price .price,
+.kommerce-price-box .minimal-price .price {
+    font-size: 1.5rem;   /* text-2xl */
+    line-height: 1.25;
+    font-weight: 700;
+    color: #111827;      /* gray-900 */
+}
+
+/* Range bundle "Da X a Y": leggermente più piccolo del prezzo singolo. */
+.kommerce-price-box .kommerce-price-range {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.kommerce-price-box .price-from .price,
+.kommerce-price-box .price-to .price {
+    font-size: 1.25rem;  /* text-xl */
+    line-height: 1.25;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* "A partire da" (configurable con varianti a prezzi diversi). */
+.kommerce-price-box .minimal-price-link {
+    font-size: 0.875rem;
+    color: #4b5563; /* gray-600 */
+    text-decoration: underline;
+}
+
+/* Etichette "Regular Price"/"Special Price": nascoste. Il tema le nasconde
+   solo se il price box ha la classe .price-box; qui rendiamo il modulo
+   indipendente anche da quella condizione. */
+.kommerce-price-box .old-price .price-label,
+.kommerce-price-box .special-price .price-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Etichetta "Tasse escl." dopo l'importo IVA esclusa (markup renderAmount). */
+.kommerce-price-box .price-excluding-tax::after {
+    content: " " attr(data-label);
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+/* Apply typography with class `prose` on PageBuilder */
+[data-content-type="row"] {
+    &[data-appearance="contained"] {
+        @apply prose;
+    }
+}

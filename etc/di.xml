@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!--
+        Magento\Framework\Pricing\Render\PriceBox è la classe base reale da
+        cui derivano tutti i blocchi di rendering prezzo per QUALSIASI tipo
+        di prodotto: Magento\Catalog\Pricing\Render\FinalPriceBox (simple)
+        e, a cascata, Magento\ConfigurableProduct\Pricing\Render\FinalPriceBox
+        e Magento\Bundle\Pricing\Render\FinalPriceBox la estendono a loro
+        volta. Agganciandoci qui invece che su singole classi concrete, la
+        stessa infrastruttura vale per tutti i product type: basta
+        aggiungere righe alla mappa "templateMap" qui sotto, senza scrivere
+        altro codice PHP.
+    -->
+    <type name="Magento\Framework\Pricing\Render\PriceBox">
+        <plugin name="kommerce_hyvathemefix_template_override"
+                type="Kommerce\HyvaThemeFix\Plugin\Pricing\TemplateOverridePlugin"/>
+    </type>
+
+    <type name="Kommerce\HyvaThemeFix\Plugin\Pricing\TemplateOverridePlugin">
+        <arguments>
+            <argument name="templateMap" xsi:type="array">
+
+                <!-- Prodotti simple / virtual / downloadable -->
+                <item name="Magento_Catalog::product/price/final_price.phtml" xsi:type="string">Kommerce_HyvaThemeFix::product/price/final_price.phtml</item>
+
+                <!-- Prodotti configurable -->
+                <item name="Magento_ConfigurableProduct::product/price/final_price.phtml" xsi:type="string">Kommerce_HyvaThemeFix::product/price/final_price_configurable.phtml</item>
+
+                <!-- Prodotti bundle -->
+                <item name="Magento_Bundle::product/price/final_price.phtml" xsi:type="string">Kommerce_HyvaThemeFix::product/price/final_price_bundle.phtml</item>
+
+                <!--
+                    Per estendere il fix anche ai prodotti grouped, il pattern
+                    è identico: copia
+                    vendor/magento/module-grouped-product/view/base/templates/product/price/final_price.phtml
+                    in questo modulo, rimuovi 'skip_adjustments' => true dove
+                    presente, e aggiungi qui:
+
+                    <item name="Magento_GroupedProduct::product/price/final_price.phtml" xsi:type="string">Kommerce_HyvaThemeFix::product/price/final_price_grouped.phtml</item>
+
+                    (i prodotti grouped in genere non hanno un prezzo proprio
+                    da barrare - normalmente elencano i child product - quindi
+                    verifica prima se il bug si presenta davvero nel tuo caso
+                    prima di investire tempo su questa estensione)
+                -->
+
+            </argument>
+        </arguments>
+    </type>
+
+</config>

@@ -1,0 +1,135 @@
+<?php
+/**
+ * Kommerce_HyvaThemeFix
+ *
+ * Sostituisce Magento_Bundle::product/price/final_price.phtml
+ *
+ * FIX APPLICATO: rimosso 'skip_adjustments' => true da OGNI occorrenza del
+ * blocco "old-price" (compare in 3 punti di questo template: caso "As low
+ * as" a prezzo singolo, caso range "From/To", e caso prezzo singolo senza
+ * range). Stesso bug di final_price.phtml (prodotti semplici), vedi
+ * commento in quel file e https://github.com/magento/magento2/issues/37989
+ *
+ * NOTA SULLA STRUTTURA: ricalca quella standard di Magento_Bundle
+ * (getPrice()->getMinimalPrice()/getMaximalPrice(), getPriceType('regular_price'),
+ * getSaleableItem()->getPriceView() per il caso "As low as" configurato
+ * sul prodotto, showRangePrice() per il caso "Da X a Y"). Prima di andare
+ * in produzione confronta questo file con
+ * vendor/magento/module-bundle/view/base/templates/product/price/final_price.phtml
+ * della tua versione di Magento, per eventuali differenze minori introdotte
+ * da patch successive.
+ *
+ * NOTA SUGLI STILI: nessuna utility Tailwind (non compilata per app/code);
+ * tutto lo stile è in view/frontend/tailwind/module.css, incluso nel build
+ * del tema tramite la registrazione in app/etc/hyva-themes.json.
+ *
+ * @var \Magento\Bundle\Pricing\Render\FinalPriceBox $block
+ */
+
+$idSuffix = $block->getIdSuffix() ?: '';
+
+/** @var \Magento\Bundle\Pricing\Price\FinalPrice $finalPriceModel */
+$finalPriceModel = $block->getPrice();
+$minimalPrice    = $finalPriceModel->getMinimalPrice();
+$maximalPrice    = $finalPriceModel->getMaximalPrice();
+
+/** @var \Magento\Framework\Pricing\Price\PriceInterface $regularPriceModel */
+$regularPriceModel   = $block->getPriceType('regular_price');
+$maximalRegularPrice = $regularPriceModel->getMaximalPrice();
+$minimalRegularPrice = $regularPriceModel->getMinimalPrice();
+?>
+<div class="kommerce-price-box">
+
+<?php if ($block->getSaleableItem()->getPriceView()): ?>
+
+    <!-- Prodotto configurato con Price View = "As low as": una sola cifra -->
+    <p class="minimal-price">
+        <?= /* @noEscape */ $block->renderAmount($minimalPrice, [
+            'display_label'     => __('As low as'),
+            'price_id'          => $block->getPriceId('from-'),
+            'include_container' => true,
+        ]); ?>
+    </p>
+    <?php if ($minimalPrice < $minimalRegularPrice): ?>
+        <span class="old-price">
+            <?= /* @noEscape */ $block->renderAmount($minimalRegularPrice, [
+                'display_label'     => __('Regular Price'),
+                'price_id'          => $block->getPriceId('old-price-' . $idSuffix),
+                'include_container' => true,
+                // 'skip_adjustments' rimosso volutamente.
+            ]); ?>
+        </span>
+    <?php endif; ?>
+
+<?php else: ?>
+
+    <?php if ($block->showRangePrice()): ?>
+
+        <!-- Price Range attivo: mostra "Da X" e "A Y" -->
+        <div class="kommerce-price-range">
+
+            <p class="price-from">
+                <?= /* @noEscape */ $block->renderAmount($minimalPrice, [
+                    'display_label'     => __('From'),
+                    'price_id'          => $block->getPriceId('from-'),
+                    'price_type'        => 'minPrice',
+                    'include_container' => true,
+                ]); ?>
+                <?php if ($minimalPrice < $minimalRegularPrice): ?>
+                    <span class="old-price">
+                        <?= /* @noEscape */ $block->renderAmount($minimalRegularPrice, [
+                            'display_label'     => __('Regular Price'),
+                            'price_id'          => $block->getPriceId('old-price-' . $idSuffix),
+                            'include_container' => true,
+                            // 'skip_adjustments' rimosso volutamente.
+                        ]); ?>
+                    </span>
+                <?php endif; ?>
+            </p>
+
+            <p class="price-to">
+                <?= /* @noEscape */ $block->renderAmount($maximalPrice, [
+                    'display_label'     => __('To'),
+                    'price_id'          => $block->getPriceId('to-'),
+                    'price_type'        => 'maxPrice',
+                    'include_container' => true,
+                ]); ?>
+                <?php if ($maximalPrice < $maximalRegularPrice): ?>
+                    <span class="old-price">
+                        <?= /* @noEscape */ $block->renderAmount($maximalRegularPrice, [
+                            'display_label'     => __('Regular Price'),
+                            'price_id'          => $block->getPriceId('old-price-' . $idSuffix),
+                            'include_container' => true,
+                            // 'skip_adjustments' rimosso volutamente.
+                        ]); ?>
+                    </span>
+                <?php endif; ?>
+            </p>
+
+        </div>
+
+    <?php else: ?>
+
+        <!-- Nessun range: prezzo minimo unico -->
+        <span class="normal-price">
+            <?= /* @noEscape */ $block->renderAmount($minimalPrice, [
+                'price_id'          => $block->getPriceId('product-price-'),
+                'include_container' => true,
+            ]); ?>
+        </span>
+        <?php if ($minimalPrice < $minimalRegularPrice): ?>
+            <span class="old-price">
+                <?= /* @noEscape */ $block->renderAmount($minimalRegularPrice, [
+                    'display_label'     => __('Regular Price'),
+                    'price_id'          => $block->getPriceId('old-price-' . $idSuffix),
+                    'include_container' => true,
+                    // 'skip_adjustments' rimosso volutamente.
+                ]); ?>
+            </span>
+        <?php endif; ?>
+
+    <?php endif; ?>
+
+<?php endif; ?>
+
+</div>
