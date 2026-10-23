@@ -6,7 +6,28 @@ Sales > Tax > Price Display Settings > Display Prices In Catalog** è impostato 
 downloadable**, **configurable** e **bundle**. Pensato per essere installato identico
 in più progetti Hyvä (o Luma) senza mai toccare il tema.
 
-## Il problema che risolve
+## Installazione
+
+```bash
+composer config repositories.hyva-theme-fix vcs https://github.com/kommercedigital/hyva-theme-fix
+composer require kommercedigital/hyva-theme-fix
+bin/magento module:enable Kommerce_HyvaThemeFix
+bin/magento setup:upgrade
+bin/magento cache:flush
+```
+
+### Rigenerare il CSS di Tailwind (Hyvä)
+
+Poiché il modulo aggiunge stili CSS specifici per Hyvä, è necessario rieseguire il build di Tailwind del tema per includere il nuovo `module.css` nel CSS finale. Il comando esatto dipende dal setup del tuo tema, ad esempio:
+
+```bash
+cd app/design/frontend/<Vendor>/<theme>/web/tailwind
+npm run build
+```
+
+Consulta la documentazione del tuo tema Hyvä per il comando corretto.
+
+## I problemi che risolve
 
 Con la visualizzazione "Both" attiva, quando un prodotto ha uno special price:
 
