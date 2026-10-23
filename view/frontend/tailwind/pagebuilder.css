@@ -1,0 +1,6 @@
+/* Apply typography.css with class `prose` on PageBuilder */
+[data-content-type="row"] {
+    &[data-appearance="contained"] {
+        @apply prose;
+    }
+}

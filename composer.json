@@ -3,7 +3,7 @@
     "description": "Corregge il rendering del prezzo barrato per prodotti simple, configurable e bundle quando Magento è configurato per mostrare i prezzi IVA inclusa ed esclusa (Display Prices In Catalog = Both). Compatibile con Hyvä e Luma.",
     "type": "magento2-module",
     "license": "proprietary",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "require": {
         "php": "~8.1.0||~8.2.0||~8.3.0||~8.4.0||~8.5.0",
         "magento/module-catalog": "*",
