@@ -3,7 +3,7 @@
 Modulo per **Magento 2.4.7+** con tema **Hyvä** che raccoglie correzioni e miglioramenti essenziali di rendering e stile per il frontend, separati in due aree principali:
 
 1. **Fix Prezzi (Rendering e Stili)**: Corregge il calcolo e il rendering del prezzo barrato (special price) quando la configurazione prezzi è impostata su IVA inclusa ed esclusa (*Including and Excluding Tax*), coprendo prodotti simple, virtual, downloadable, configurable e bundle. Include inoltre gli stili Tailwind dedicati per PLP e PDP.
-2. **Fix PageBuilder (Tipografia)**: Applica automaticamente la classe tipografica `prose` (Tailwind Typography) alle righe PageBuilder con layout *contained*, garantendo una corretta formattazione dei contenuti CMS su tema Hyvä.
+2. **Fix PageBuilder (Tipografia Headings)**: Applica stili tipografici mirati agli elementi Heading (`h1`–`h6`) di PageBuilder, ripristinando la corretta gerarchia visiva senza i margini e gli spazi sproporzionati generati da `prose` su tutti gli elementi.
 
 Pensato per essere installato nei progetti Hyvä senza dover modificare i template del tema.
 
@@ -54,20 +54,12 @@ Fornisce le regole CSS necessarie per visualizzare chiaramente i prezzi su Hyvä
 ## 2. Fix PageBuilder (`view/frontend/tailwind/pagebuilder.css`)
 
 ### Il problema con PageBuilder su Hyvä
-I blocchi di contenuto creati con Magento PageBuilder (righe di testo, tabelle, liste, titoli) su Hyvä perdono spesso la formattazione tipografica standard poiché Tailwind effettua il reset CSS globale e non applica stili di default ai tag HTML generati nell'editor WYSIWYG/PageBuilder.
+I titoli e i contenuti generati tramite Magento PageBuilder su Hyvä perdono la formattazione tipografica standard poiché Tailwind effettua il reset CSS globale (preflight) azzerando dimensioni e pesi di `h1`–`h6`. L'applicazione generica di `prose` (Tailwind Typography) sull'intera riga aggiunge margini e padding eccessivi su paragrafi, tabelle e contenitori.
 
 ### Come viene risolto
-Il file `pagebuilder.css` aggancia la direttiva `@apply prose;` di Tailwind Typography alle righe di PageBuilder con contenitore:
+Il file `pagebuilder.css` definisce una gerarchia tipografica pulita e proporzionata per tutti i tag di intestazione (`h1`–`h6`) usati nei blocchi PageBuilder (Heading, Text, HTML, Banner, Slide) con supporto responsive mobile/desktop.
 
-```css
-[data-content-type="row"] {
-    &[data-appearance="contained"] {
-        @apply prose;
-    }
-}
-```
-
-Questo assicura che paragrafi, titoli, elenchi puntati, link e tabelle inseriti tramite PageBuilder mantengano una resa tipografica armoniosa, leggibile e coerente con il design system del tema Hyvä.
+L'uso del selettore pseudo-classe `:where()` assegna specificità CSS pari a zero, consentendo a eventuali classi Tailwind (es. `text-primary`, `text-center`) o stili inline impostati direttamente nell'editor PageBuilder di prevalere senza bisogno di `!important`.
 
 ---
 
@@ -112,9 +104,9 @@ Kommerce_HyvaThemeFix/
    - Verifica che i prezzi base vengano mostrati regolarmente.
 
 ### Verifica PageBuilder
-1. Crea o modifica una pagina CMS / Blocco contenente una riga PageBuilder con appearance **Contained**.
-2. Inserisci elementi tipografici misti (intestazioni H2/H3, elenchi puntati/numerati, paragrafi formattati, tabelle o citazioni).
-3. Verifica nel frontend che gli stili tipografici (`prose`) siano applicati correttamente garantendo leggibilità e spaziature adeguate.
+1. Crea o modifica una pagina CMS / Blocco contenente elementi PageBuilder (Heading, Text, Banner, ecc.).
+2. Inserisci intestazioni (H1, H2, H3, H4, H5, H6).
+3. Verifica nel frontend che i titoli abbiano la corretta gerarchia visiva (dimensioni del testo e font-weight) e che non siano presenti margini o spaziature anomale sul resto della pagina.
 
 ---
 
